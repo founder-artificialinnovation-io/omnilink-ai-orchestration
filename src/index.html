@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniLink - Multi-Modal AI Orchestration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .provider-status {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .provider-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .provider-card.active {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .provider-card.inactive {
+            border-color: #dc3545;
+            background: #fff8f8;
+        }
+
+        .task-builder {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .workflow-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .task-queue {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .task-item.processing {
+            border-color: #17a2b8;
+            background: #f0f9ff;
+        }
+
+        .task-item.completed {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .task-item.failed {
+            border-color: #dc3545;
+            background: #fff8f8;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6c757d;
+        }
+
+        .status-indicator.processing {
+            background: #17a2b8;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.completed {
+            background: #28a745;
+        }
+
+        .status-indicator.failed {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .results-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .results-panel.show {
+            display: block;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .result-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 OmniLink</h1>
+            <p>Multi-Modal AI Orchestration Platform</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Provider Status Panel -->
+            <div class="provider-status">
+                <h3>🤖 AI Provider Status</h3>
+                <div class="provider-grid" id="providerGrid">
+                    <!-- Providers will be populated here -->
+                </div>
+            </div>
+
+            <!-- Task Builder Panel -->
+            <div class="task-builder">
+                <h3>📝 Create AI Task</h3>
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label for="taskName">Task Name</label>
+                        <input type="text" id="taskName" placeholder="e.g., Find Investor Contacts" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskPrompt">Task Prompt</label>
+                        <textarea id="taskPrompt" placeholder="Describe what you want the AI to do..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskProvider">AI Provider</label>
+                        <select id="taskProvider" required>
+                            <option value="">Select Provider</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskPriority">Priority (1-10)</label>
+                        <input type="number" id="taskPriority" min="1" max="10" value="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxTokens">Max Tokens</label>
+                        <input type="number" id="maxTokens" min="100" max="4000" value="1000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temperature">Temperature (0.0-1.0)</label>
+                        <input type="number" id="temperature" min="0" max="1" step="0.1" value="0.3">
+                    </div>
+
+                    <button type="submit" class="btn">➕ Add Task</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">🗑️ Clear</button>
+                </form>
+            </div>
+
+            <!-- Workflow Management Panel -->
+            <div class="workflow-panel">
+                <h3>🔄 Workflow Management</h3>
+                <div>
+                    <button class="btn btn-success" onclick="executeWorkflow()">🚀 Execute Workflow</button>
+                    <button class="btn btn-secondary" onclick="clearWorkflow()">🗑️ Clear All Tasks</button>
+                    <button class="btn btn-secondary" onclick="saveWorkflow()">💾 Save Workflow</button>
+                    <button class="btn btn-secondary" onclick="loadWorkflow()">📂 Load Workflow</button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Ready to execute workflow</p>
+
+                <div class="task-queue" id="taskQueue">
+                    <!-- Tasks will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="results-panel" id="resultsPanel">
+                <h3>📊 Execution Results</h3>
+                <div id="resultsContainer">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeConfigModal()">&times;</span>
+            <h3>⚙️ Provider Configuration</h3>
+            <p>Configure your AI provider API keys:</p>
+            <div class="form-group">
+                <label for="openaiKey">OpenAI API Key</label>
+                <input type="password" id="openaiKey" placeholder="sk-...">
+            </div>
+            <div class="form-group">
+                <label for="claudeKey">Claude API Key</label>
+                <input type="password" id="claudeKey" placeholder="sk-ant-...">
+            </div>
+            <button class="btn" onclick="saveConfiguration()">💾 Save Configuration</button>
+        </div>
+    </div>
+
+    <script>
+        // OmniLink Core Implementation
+        class OmniLinkCore {
+            constructor() {
+                this.providers = new Map();
+                this.tasks = [];
+                this.workflows = [];
+                this.currentWorkflow = null;
+                this.executionHistory = [];
+                this.init();
+            }
+
+            init() {
+                this.loadConfiguration();
+                this.updateProviderStatus();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('taskForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addTask();
+                });
+            }
+
+            loadConfiguration() {
+                const openaiKey = localStorage.getItem('openai_key');
+                const claudeKey = localStorage.getItem('claude_key');
+
+                if (openaiKey) {
+                    this.registerProvider('OPENAI_GPT35', new OpenAIProvider(openaiKey, 'gpt-3.5-turbo'));
+                    this.registerProvider('OPENAI_GPT4', new OpenAIProvider(openaiKey, 'gpt-4'));
+                }
+
+                if (claudeKey) {
+                    this.registerProvider('CLAUDE_SONNET', new ClaudeProvider(claudeKey));
+                }
+
+                if (!openaiKey && !claudeKey) {
+                    this.showConfigModal();
+                }
+            }
+
+            showConfigModal() {
+                document.getElementById('configModal').style.display = 'block';
+            }
+
+            registerProvider(name, provider) {
+                this.providers.set(name, provider);
+                this.updateProviderStatus();
+                this.updateProviderSelect();
+            }
+
+            updateProviderStatus() {
+                const grid = document.getElementById('providerGrid');
+                grid.innerHTML = '';
+
+                const providerNames = ['OPENAI_GPT35', 'OPENAI_GPT4', 'CLAUDE_SONNET'];
+                
+                providerNames.forEach(name => {
+                    const isActive = this.providers.has(name);
+                    const card = document.createElement('div');
+                    card.className = `provider-card ${isActive ? 'active' : 'inactive'}`;
+                    card.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 5px;">${name.replace('_', ' ')}</div>
+                        <div style="font-size: 0.9em; color: ${isActive ? '#28a745' : '#dc3545'};">
+                            ${isActive ? '✅ Active' : '❌ Not Configured'}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            updateProviderSelect() {
+                const select = document.getElementById('taskProvider');
+                select.innerHTML = '<option value="">Select Provider</option>';
+                
+                this.providers.forEach((provider, name) => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name.replace('_', ' ');
+                    select.appendChild(option);
+                });
+            }
+
+            addTask() {
+                const taskData = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('taskName').value,
+                    prompt: document.getElementById('taskPrompt').value,
+                    provider: document.getElementById('taskProvider').value,
+                    priority: parseInt(document.getElementById('taskPriority').value),
+                    maxTokens: parseInt(document.getElementById('maxTokens').value),
+                    temperature: parseFloat(document.getElementById('temperature').value),
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                this.tasks.push(taskData);
+                this.updateTaskQueue();
+                this.clearTaskForm();
+            }
+
+            clearTaskForm() {
+                document.getElementById('taskForm').reset();
+                document.getElementById('taskPriority').value = '5';
+                document.getElementById('maxTokens').value = '1000';
+                document.getElementById('temperature').value = '0.3';
+            }
+
+            updateTaskQueue() {
+                const queue = document.getElementById('taskQueue');
+                queue.innerHTML = '';
+
+                if (this.tasks.length === 0) {
+                    queue.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No tasks in queue</p>';
+                    return;
+                }
+
+                this.tasks.forEach((task, index) => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = `task-item ${task.status}`;
+                    taskEl.innerHTML = `
+                        <div class="status-indicator ${task.status}"></div>
+                        <h4>${task.name}</h4>
+                        <p><strong>Provider:</strong> ${task.provider.replace('_', ' ')}</p>
+                        <p><strong>Priority:</strong> ${task.priority} | <strong>Max Tokens:</strong> ${task.maxTokens} | <strong>Temperature:</strong> ${task.temperature}</p>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 8px;">${task.prompt.substring(0, 100)}${task.prompt.length > 100 ? '...' : ''}</p>
+                        <button class="btn btn-danger" style="position: absolute; bottom: 10px; right: 10px; padding: 5px 10px; font-size: 12px;" onclick="omnilink.removeTask(${index})">Remove</button>
+                    `;
+                    queue.appendChild(taskEl);
+                });
+            }
+
+            removeTask(index) {
+                this.tasks.splice(index, 1);
+                this.updateTaskQueue();
+            }
+
+            async executeWorkflow() {
+                if (this.tasks.length === 0) {
+                    alert('No tasks to execute!');
+                    return;
+                }
+
+                const workflowId = Date.now().toString();
+                this.currentWorkflow = {
+                    id: workflowId,
+                    tasks: [...this.tasks],
+                    startTime: Date.now(),
+                    status: 'running'
+                };
+
+                document.getElementById('progressText').textContent = 'Executing workflow...';
+                document.getElementById('resultsPanel').classList.remove('show');
+
+                const results = [];
+                let completed = 0;
+
+                for (let i = 0; i < this.tasks.length; i++) {
+                    const task = this.tasks[i];
+                    task.status = 'processing';
+                    this.updateTaskQueue();
+
+                    const progress = ((i) / this.tasks.length) * 100;
+                    document.getElementById('progressFill').style.width = `${progress}%`;
+                    document.getElementById('progressText').textContent = `Processing task ${i + 1} of ${this.tasks.length}: ${task.name}`;
+
+                    try {
+                        const provider = this.providers.get(task.provider);
+                        if (!provider) {
+                            throw new Error(`Provider ${task.provider} not available`);
+                        }
+
+                        const result = await provider.executeTask(task);
+                        task.status = 'completed';
+                        results.push(result);
+                        completed++;
+                    } catch (error) {
+                        task.status = 'failed';
+                        results.push({
+                            taskId: task.id,
+                            name: task.name,
+                            provider: task.provider,
+                            status: 'failed',
+                            error: error.message
+                        });
+                    }
+
+                    this.updateTaskQueue();
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing time
+                }
+
+                // Workflow complete
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('progressText').textContent = `Workflow completed! ${completed}/${this.tasks.length} tasks successful`;
+
+                this.currentWorkflow.endTime = Date.now();
+                this.currentWorkflow.status = 'completed';
+                this.currentWorkflow.results = results;
+
+                this.displayResults(results);
+                this.executionHistory.push(this.currentWorkflow);
+            }
+
+            displayResults(results) {
+                const container = document.getElementById('resultsContainer');
+                container.innerHTML = '';
+
+                results.forEach(result => {
+                    const resultEl = document.createElement('div');
+                    resultEl.className = 'result-item';
+                    
+                    const statusColor = result.status === 'completed' ? '#28a745' : '#dc3545';
+                    const statusIcon = result.status === 'completed' ? '✅' : '❌';
+                    
+                    resultEl.innerHTML = `
+                        <div class="result-meta">
+                            <strong>${statusIcon} ${result.name}</strong> | 
+                            Provider: ${result.provider?.replace('_', ' ') || 'Unknown'} | 
+                            Status: <span style="color: ${statusColor};">${result.status}</span>
+                            ${result.processingTime ? ` | Time: ${result.processingTime.toFixed(2)}s` : ''}
+                            ${result.cost ? ` | Cost: $${result.cost.toFixed(4)}` : ''}
+                        </div>
+                        <div class="result-content">
+                            ${result.output || result.error || 'No output available'}
+                        </div>
+                    `;
+                    container.appendChild(resultEl);
+                });
+
+                document.getElementById('resultsPanel').classList.add('show');
+            }
+
+            clearWorkflow() {
+                this.tasks = [];
+                this.updateTaskQueue();
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('progressText').textContent = 'Ready to execute workflow';
+                document.getElementById('resultsPanel').classList.remove('show');
+            }
+
+            saveWorkflow() {
+                if (this.tasks.length === 0) {
+                    alert('No tasks to save!');
+                    return;
+                }
+
+                const workflow = {
+                    name: prompt('Enter workflow name:') || `Workflow_${Date.now()}`,
+                    tasks: this.tasks,
+                    createdAt: new Date().toISOString()
+                };
+
+                const savedWorkflows = JSON.parse(localStorage.getItem('omnilink_workflows') || '[]');
+                savedWorkflows.push(workflow);
+                localStorage.setItem('omnilink_workflows', JSON.stringify(savedWorkflows));
+                
+                alert('Workflow saved successfully!');
+            }
+
+            loadWorkflow() {
+                const savedWorkflows = JSON.parse(localStorage.getItem('omnilink_workflows') || '[]');
+                
+                if (savedWorkflows.length === 0) {
+                    alert('No saved workflows found!');
+                    return;
+                }
+
+                const workflowNames = savedWorkflows.map((w, i) => `${i + 1}. ${w.name}`).join('\n');
+                const selection = prompt(`Select workflow to load:\n${workflowNames}\n\nEnter number:`);
+                
+                if (selection && !isNaN(selection)) {
+                    const index = parseInt(selection) - 1;
+                    if (index >= 0 && index < savedWorkflows.length) {
+                        this.tasks = [...savedWorkflows[index].tasks];
+                        this.tasks.forEach(task => task.status = 'pending'); // Reset status
+                        this.updateTaskQueue();
+                        alert('Workflow loaded successfully!');
+                    }
+                }
+            }
+        }
+
+        // AI Provider Implementations
+        class OpenAIProvider {
+            constructor(apiKey, model = 'gpt-3.5-turbo') {
+                this.apiKey = apiKey;
+                this.model = model;
+            }
+
+            async executeTask(task) {
+                const startTime = Date.now();
+                
+                try {
+                    // Simulate API call (replace with actual OpenAI API call)
+                    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+                    
+                    // Mock response
+                    const output = `OpenAI ${this.model} response for: ${task.name}\n\nProcessed prompt: ${task.prompt.substring(0, 100)}...\n\nThis is a simulated response. In production, this would be the actual AI output.`;
+                    
+                    const processingTime = (Date.now() - startTime) / 1000;
+                    const estimatedTokens = Math.floor(output.length / 4);
+                    
+                    return {
+                        taskId: task.id,
+                        name: task.name,
+                        provider: task.provider,
+                        status: 'completed',
+                        output: output,
+                        processingTime: processingTime,
+                        tokenUsage: estimatedTokens,
+                        cost: this.estimateCost(estimatedTokens)
+                    };
+                } catch (error) {
+                    return {
+                        taskId: task.id,
+                        name: task.name,
+                        provider: task.provider,
+                        status: 'failed',
+                        error: error.message,
+                        processingTime: (Date.now() - startTime) / 1000
+                    };
+                }
+            }
+
+            estimateCost(tokens) {
+                return (tokens / 1000) * 0.002; // $0.002 per 1K tokens
+            }
+        }
+
+        class ClaudeProvider {
+            constructor(apiKey, model = 'claude-3-sonnet-20240229') {
+                this.apiKey = apiKey;
+                this.model = model;
+            }
+
+            async executeTask(task) {
+                const startTime = Date.now();
+                
+                try {
+                    // Simulate API call (replace with actual Claude API call)
+                    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2500));
+                    
+                    // Mock response
+                    const output = `Claude ${this.model} response for: ${task.name}\n\nAnalyzed prompt: ${task.prompt.substring(0, 100)}...\n\nThis is a simulated response. In production, this would be the actual Claude output with detailed analysis.`;
+                    
+                    const processingTime = (Date.now() - startTime) / 1000;
+                    const estimatedTokens = Math.floor(output.length / 4);
+                    
+                    return {
+                        taskId: task.id,
+                        name: task.name,
+                        provider: task.provider,
+                        status: 'completed',
+                        output: output,
+                        processingTime: processingTime,
+                        tokenUsage: estimatedTokens,
+                        cost: this.estimateCost(estimatedTokens)
+                    };
+                } catch (error) {
+                    return {
+                        taskId: task.id,
+                        name: task.name,
+                        provider: task.provider,
+                        status: 'failed',
+                        error: error.message,
+                        processingTime: (Date.now() - startTime) / 1000
+                    };
+                }
+            }
+
+            estimateCost(tokens) {
+                return (tokens / 1000) * 0.008; // $0.008 per 1K tokens
+            }
+        }
+
+        // Global functions for UI interaction
+        function clearForm() {
+            omnilink.clearTaskForm();
+        }
+
+        function executeWorkflow() {
+            omnilink.executeWorkflow();
+        }
+
+        function clearWorkflow() {
+            omnilink.clearWorkflow();
+        }
+
+        function saveWorkflow() {
+            omnilink.saveWorkflow();
+        }
+
+        function loadWorkflow() {
+            omnilink.loadWorkflow();
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+
+        function saveConfiguration() {
+            const openaiKey = document.getElementById('openaiKey').value;
+            const claudeKey = document.getElementById('claudeKey').value;
+
+            if (openaiKey) {
+                localStorage.setItem('openai_key', openaiKey);
+                omnilink.registerProvider('OPENAI_GPT35', new OpenAIProvider(openaiKey, 'gpt-3.5-turbo'));
+                omnilink.registerProvider('OPENAI_GPT4', new OpenAIProvider(openaiKey, 'gpt-4'));
+            }
+
+            if (claudeKey) {
+                localStorage.setItem('claude_key', claudeKey);
+                omnilink.registerProvider('CLAUDE_SONNET', new ClaudeProvider(claudeKey));
+            }
+
+            closeConfigModal();
+            alert('Configuration saved! Providers are now available.');
+        }
+
+        // Initialize OmniLink
+        const omnilink = new OmniLinkCore();
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('configModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
